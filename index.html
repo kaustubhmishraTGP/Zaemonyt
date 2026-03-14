@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Zaemon | Minecraft Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{--bg:#0d1a0e;--surface:#111d12;--surface2:#162118;--border:#2a3d2b;--accent:#5bff7f;--text:#f0f0f0;--muted:#7aad7c;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow-x:hidden;cursor:none!important;}
+*{cursor:none!important;}
+#bg-canvas{position:fixed;inset:0;z-index:0;opacity:.12;pointer-events:none;}
+#player-canvas{position:fixed;inset:0;z-index:20;pointer-events:none;}
+#fx-canvas{position:fixed;inset:0;z-index:50;pointer-events:none;}
+#cursor{position:fixed;z-index:9999;pointer-events:none;width:24px;height:24px;transform:translate(-50%,-50%);}
+#cursor::before,#cursor::after{content:'';position:absolute;background:#fff;box-shadow:1px 1px 0 #000;}
+#cursor::before{width:2px;height:12px;left:11px;top:6px;}
+#cursor::after{width:12px;height:2px;left:6px;top:11px;}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:1rem 3rem;background:rgba(10,22,11,.92);backdrop-filter:blur(16px);border-bottom:2px solid var(--border);}
+.nav-logo{font-family:'Space Mono',monospace;font-size:1.2rem;font-weight:700;color:var(--accent);letter-spacing:.12em;text-decoration:none;text-shadow:0 0 20px rgba(91,255,127,.5);}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.8rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;transition:color .2s;font-family:'Space Mono',monospace;}
+.nav-links a:hover{color:var(--accent);}
+#hero{position:relative;min-height:100vh;display:flex;align-items:center;gap:3rem;padding:7rem 4rem 4rem;overflow:hidden;}
+.hero-left{flex:1;position:relative;z-index:10;}
+.hero-right{flex:0 0 460px;height:460px;position:relative;z-index:10;}
+#globe-canvas{width:100%!important;height:100%!important;border-radius:50%;filter:drop-shadow(0 0 60px rgba(91,255,127,.2)) drop-shadow(0 0 100px rgba(30,100,255,.12));}
+.hero-badge{display:inline-flex;align-items:center;gap:.6rem;background:rgba(91,255,127,.08);border:1px solid rgba(91,255,127,.35);padding:.45rem 1.1rem;border-radius:2px;font-size:.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1.8rem;animation:fadeUp .7s ease both;}
+.blink{animation:blink 1s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.hero-title{font-family:'Space Mono',monospace;font-size:clamp(3.5rem,9vw,7.5rem);font-weight:700;line-height:.88;letter-spacing:-.02em;color:var(--text);text-shadow:4px 4px 0 rgba(0,0,0,.6);animation:fadeUp .7s .1s ease both;}
+.hero-title .green{color:var(--accent);display:block;text-shadow:4px 4px 0 rgba(0,60,0,.6),0 0 50px rgba(91,255,127,.35);}
+.hero-sub{margin-top:1rem;font-family:'Space Mono',monospace;font-size:.85rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;animation:fadeUp .7s .15s ease both;}
+.hero-tagline{margin-top:1.8rem;font-size:1.1rem;color:#b0d4b2;max-width:440px;line-height:1.7;font-weight:300;animation:fadeUp .7s .2s ease both;}
+.hero-btns{margin-top:2.5rem;display:flex;gap:1rem;flex-wrap:wrap;animation:fadeUp .7s .25s ease both;}
+.btn{display:inline-flex;align-items:center;gap:.6rem;padding:.9rem 2rem;font-family:'Space Mono',monospace;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;position:relative;transition:filter .15s,transform .1s;border:none;}
+.btn::after{content:'';position:absolute;bottom:-4px;right:-4px;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:-1;}
+.btn:active{transform:translate(2px,2px);}
+.btn:active::after{display:none;}
+.btn-primary{background:#5ba544;color:#fff;border-top:3px solid #7dce5f;border-left:3px solid #7dce5f;border-right:3px solid #2e6622;border-bottom:3px solid #2e6622;}
+.btn-primary:hover{filter:brightness(1.2);transform:translateY(-2px);}
+.btn-secondary{background:#5b6bff;color:#fff;border-top:3px solid #8090ff;border-left:3px solid #8090ff;border-right:3px solid #2535bb;border-bottom:3px solid #2535bb;}
+.btn-secondary:hover{filter:brightness(1.2);transform:translateY(-2px);}
+.sw{position:relative;z-index:10;}
+section{padding:6rem 4rem;max-width:1200px;margin:0 auto;position:relative;}
+.section-label{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:.8rem;opacity:.8;}
+.section-title{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;line-height:1.1;margin-bottom:3rem;letter-spacing:-.02em;font-family:'Space Mono',monospace;text-shadow:3px 3px 0 rgba(0,0,0,.5);}
+.mc-divider{width:100%;height:14px;background:#4a7c3f;border-top:3px solid #7dce5f;border-bottom:3px solid #2a4a22;}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;}
+.about-text{font-size:1.05rem;line-height:1.85;color:#b0d4b2;font-weight:300;}
+.about-text strong{color:var(--text);font-weight:700;}
+.about-stats{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.stat-card{background:var(--surface);border:2px solid var(--border);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;padding:1.4rem;transition:all .2s;}
+.stat-card:hover{border-color:var(--accent);transform:translateY(-3px);}
+.stat-number{font-family:'Space Mono',monospace;font-size:1.9rem;font-weight:700;color:var(--accent);}
+.stat-label{font-size:.72rem;color:var(--muted);margin-top:.4rem;text-transform:uppercase;letter-spacing:.12em;font-family:'Space Mono',monospace;}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.8rem;}
+.skill-item{background:var(--surface);border:2px solid var(--border);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;padding:1rem 1.3rem;display:flex;align-items:center;gap:.8rem;transition:all .15s;font-weight:600;font-size:.88rem;}
+.skill-item:hover{border-color:var(--accent);transform:translateY(-3px) scale(1.02);background:var(--surface2);}
+.skill-icon{font-size:1.4rem;flex-shrink:0;}
+#vs{background:var(--surface);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1.2rem;}
+.vcard{background:var(--bg);border:2px solid var(--border);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;overflow:hidden;transition:all .2s;text-decoration:none;color:inherit;display:block;}
+.vcard:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.6);}
+.vthumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--surface2);}
+.vph{width:100%;aspect-ratio:16/9;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
+.vinfo{padding:1rem;}
+.vtitle{font-size:.88rem;font-weight:600;line-height:1.4;margin-bottom:.3rem;}
+.vch{font-size:.72rem;color:var(--muted);font-family:'Space Mono',monospace;}
+.vwatch{display:inline-flex;align-items:center;gap:.4rem;margin-top:.7rem;font-size:.72rem;font-family:'Space Mono',monospace;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;}
+.ctabs{display:flex;gap:.8rem;margin-bottom:2rem;}
+.tbtn{padding:.55rem 1.3rem;background:var(--bg);border:2px solid var(--border);border-top:2px solid #3d5e3e;border-bottom:2px solid #0d150e;color:var(--muted);font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;transition:all .15s;}
+.tbtn.active,.tbtn:hover{background:var(--surface2);border-color:var(--accent);color:var(--accent);}
+.chs{display:none;}.chs.active{display:block;}
+.comgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;}
+.comcard{background:var(--surface);border:2px solid var(--border);border-top:3px solid #3d5e3e;border-bottom:3px solid #0d150e;padding:2rem;transition:all .2s;text-decoration:none;color:inherit;display:block;}
+.comcard:hover{transform:translateY(-4px);border-color:var(--accent);}
+.comicon{font-size:2.2rem;margin-bottom:1rem;}
+.comcard h3{font-size:1rem;font-weight:700;margin-bottom:.5rem;font-family:'Space Mono',monospace;}
+.comcard p{font-size:.84rem;color:var(--muted);line-height:1.5;}
+.comlink{display:inline-flex;align-items:center;gap:.4rem;margin-top:1rem;font-size:.7rem;font-family:'Space Mono',monospace;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;}
+footer{border-top:3px solid #4a7c3f;background:var(--surface);padding:2rem 4rem;display:flex;justify-content:space-between;align-items:center;position:relative;z-index:10;}
+.footer-logo{font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--accent);letter-spacing:.15em;text-shadow:0 0 20px rgba(91,255,127,.4);}
+footer p{font-size:.75rem;color:var(--muted);font-family:'Space Mono',monospace;}
+/* HUD - no coords */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:150;}
+.hud-health{position:absolute;bottom:78px;left:50%;transform:translateX(-50%) translateX(-100px);display:flex;gap:2px;}
+.heart{width:16px;height:16px;flex-shrink:0;}
+.hud-xp-wrap{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);width:460px;}
+.hud-xp-bar{height:6px;background:#000;border:1px solid #333;overflow:hidden;}
+.hud-xp-fill{height:100%;background:linear-gradient(to right,#7fff4f,#4fff7f);width:62%;transition:width .8s;}
+.hud-xp-level{font-family:'Space Mono',monospace;font-size:10px;color:#7fff4f;text-align:center;margin-top:2px;text-shadow:0 0 6px rgba(100,255,80,.7);}
+.hud-hotbar{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:3px;}
+.hb-slot{width:50px;height:50px;background:rgba(15,25,16,.75);border:2px solid #555;border-bottom-color:#222;border-right-color:#222;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:20px;position:relative;transition:border-color .15s;}
+.hb-slot.sel{border:2px solid #fff!important;box-shadow:0 0 8px rgba(255,255,255,.3);}
+.hb-slot:hover{border-color:#aaa;}
+.hb-num{font-family:'Space Mono',monospace;font-size:8px;color:#aaa;position:absolute;top:2px;right:3px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:none;}
+.loader{display:flex;align-items:center;justify-content:center;padding:3rem;color:var(--muted);font-family:'Space Mono',monospace;font-size:.78rem;letter-spacing:.1em;}
+@media(max-width:900px){
+  #hero{flex-direction:column;padding:5rem 1.5rem 3rem;}
+  .hero-right{width:100%;height:300px;flex:none;}
+  section{padding:4rem 1.5rem;}
+  .about-grid,.comgrid{grid-template-columns:1fr;}
+  nav{padding:1rem 1.5rem;}.nav-links{display:none;}
+  footer{flex-direction:column;gap:.8rem;padding:1.5rem;text-align:center;}
+  .hud-hotbar,.hud-health,.hud-xp-wrap{display:none;}
+}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<canvas id="player-canvas"></canvas>
+<canvas id="fx-canvas"></canvas>
+<div id="cursor"></div>
+
+<nav>
+  <a href="#hero" class="nav-logo">⛏ ZAEMON</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#videos">Videos</a></li>
+    <li><a href="#community">Community</a></li>
+  </ul>
+</nav>
+
+<div class="sw">
+<section id="hero" style="max-width:100%;padding-top:7rem;">
+  <div class="hero-left">
+    <div class="hero-badge"><span class="blink">█</span> Minecraft Creator · India</div>
+    <h1 class="hero-title">ZAE<span class="green">MON</span></h1>
+    <p class="hero-sub">// Block by Block</p>
+    <p class="hero-tagline">Creating epic Minecraft adventures, builds and gameplay for the community.</p>
+    <div class="hero-btns">
+      <a href="https://youtube.com/@zaemonspy" target="_blank" class="btn btn-primary">▶ Subscribe on YouTube</a>
+      <a href="https://discord.gg/Ra6JK7BuCs" target="_blank" class="btn btn-secondary">⊞ Join Discord</a>
+    </div>
+  </div>
+  <div class="hero-right"><canvas id="globe-canvas"></canvas></div>
+</section>
+<div class="mc-divider"></div>
+<section id="about">
+  <p class="section-label">// 01 — About</p>
+  <h2 class="section-title reveal">About Zaemon</h2>
+  <div class="about-grid reveal">
+    <p class="about-text"><strong>Aditya</strong>, widely known as <strong>Zaemon</strong>, is a passionate Minecraft creator from <strong>India</strong>, born in <strong>2008</strong>. With a deep love for playing Minecraft, Zaemon enjoys sharing exciting gameplay, builds and creative adventures with the community.<br/><br/>Through his videos he inspires players to explore their imagination inside the Minecraft world — one block at a time.</p>
+    <div class="about-stats">
+      <div class="stat-card"><div class="stat-number">2008</div><div class="stat-label">Born</div></div>
+      <div class="stat-card"><div class="stat-number">🇮🇳</div><div class="stat-label">India</div></div>
+      <div class="stat-card"><div class="stat-number">2+</div><div class="stat-label">Channels</div></div>
+      <div class="stat-card"><div class="stat-number">∞</div><div class="stat-label">Builds</div></div>
+    </div>
+  </div>
+</section>
+<div class="mc-divider"></div>
+<section id="skills">
+  <p class="section-label">// 02 — Skills</p>
+  <h2 class="section-title reveal">What Zaemon Does</h2>
+  <div class="skills-grid reveal">
+    <div class="skill-item"><span class="skill-icon">⛏️</span> Minecraft Survival</div>
+    <div class="skill-item"><span class="skill-icon">🏗️</span> Creative Builds</div>
+    <div class="skill-item"><span class="skill-icon">🎥</span> Content Creation</div>
+    <div class="skill-item"><span class="skill-icon">🎮</span> Gameplay</div>
+    <div class="skill-item"><span class="skill-icon">🗺️</span> World Building</div>
+    <div class="skill-item"><span class="skill-icon">🎬</span> Video Editing</div>
+    <div class="skill-item"><span class="skill-icon">👥</span> Community Building</div>
+    <div class="skill-item"><span class="skill-icon">⚔️</span> PvP &amp; Combat</div>
+  </div>
+</section>
+</div>
+
+<div id="vs" class="sw">
+<section id="videos" style="max-width:1200px;margin:0 auto;">
+  <p class="section-label">// 03 — Videos</p>
+  <h2 class="section-title reveal">Latest Videos</h2>
+  <div class="ctabs">
+    <button class="tbtn active" onclick="switchTab('m')">@zaemonspy</button>
+    <button class="tbtn" onclick="switchTab('e')">@zaemonextra</button>
+  </div>
+  <div id="ch-m" class="chs active"><div id="v-m" class="vgrid"><div class="loader">Loading videos...</div></div></div>
+  <div id="ch-e" class="chs"><div id="v-e" class="vgrid"><div class="loader">Loading videos...</div></div></div>
+</section>
+</div>
+<div class="mc-divider"></div>
+
+<div class="sw">
+<section id="community">
+  <p class="section-label">// 04 — Community</p>
+  <h2 class="section-title reveal">Community</h2>
+  <p class="about-text reveal" style="margin-bottom:2rem;">Join the <strong>Buri Buri Gang</strong> community and connect with other Minecraft players.</p>
+  <div class="comgrid reveal">
+    <a href="https://discord.gg/Ra6JK7BuCs" target="_blank" class="comcard">
+      <div class="comicon">💬</div><h3>Discord Server</h3><p>Join the Buri Buri Gang Discord.</p>
+      <span class="comlink">Join → discord.gg/Ra6JK7BuCs</span>
+    </a>
+    <a href="https://youtube.com/@zaemonspy" target="_blank" class="comcard">
+      <div class="comicon">▶</div><h3>YouTube</h3><p>Watch Zaemon's main channel.</p>
+      <span class="comlink">Watch → @zaemonspy</span>
+    </a>
+    <a href="mailto:zaemonteam@gmail.com" class="comcard">
+      <div class="comicon">✉</div><h3>Email</h3><p>Business &amp; collaborations.</p>
+      <span class="comlink">Mail → zaemonteam@gmail.com</span>
+    </a>
+  </div>
+</section>
+</div>
+
+<footer>
+  <div class="footer-logo">⛏ ZAEMON</div>
+  <p>© Zaemon | Minecraft Creator</p>
+  <p>zaemon_spy</p>
+</footer>
+
+<div id="hud">
+  <div class="hud-health" id="hud-hearts"></div>
+  <div class="hud-xp-wrap">
+    <div class="hud-xp-bar"><div class="hud-xp-fill" id="xp-fill"></div></div>
+    <div class="hud-xp-level">Level 16</div>
+  </div>
+  <div class="hud-hotbar">
+    <div class="hb-slot sel"><span class="hb-num">1</span>⛏</div>
+    <div class="hb-slot"><span class="hb-num">2</span>⚔️</div>
+    <div class="hb-slot"><span class="hb-num">3</span>▶</div>
+    <div class="hb-slot"><span class="hb-num">4</span>💬</div>
+    <div class="hb-slot"><span class="hb-num">5</span>🪵</div>
+    <div class="hb-slot"><span class="hb-num">6</span>🪨</div>
+    <div class="hb-slot"><span class="hb-num">7</span>🏹</div>
+    <div class="hb-slot"><span class="hb-num">8</span>🧪</div>
+    <div class="hb-slot"><span class="hb-num">9</span>⭐</div>
+  </div>
+</div>
+
+<script>
+const SKIN_URI = "data:image/png;base64,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";
+
+/* ══ 1. BLOCK BACKGROUND ══ */
+(function(){
+  const cv=document.getElementById('bg-canvas');
+  const cx=cv.getContext('2d');
+  const BS=48;
+  const TILES=[
+    {c:'#1e3318'},{c:'#162810'},{c:'#2a1e0e'},{c:'#1a1a1a'},{c:'#1a2a16'}
+  ];
+  function sr(s){let x=s;return()=>{x=(x*1664525+1013904223)&0xffffffff;return(x>>>0)/4294967295;};}
+  function drawTile(x,y,t){
+    const r=sr(x*7919+y*6271);
+    cx.fillStyle=t.c;cx.fillRect(x,y,BS,BS);
+    cx.fillStyle='rgba(0,0,0,0.14)';
+    for(let i=0;i<4;i++)cx.fillRect(x+Math.floor(r()*BS),y+Math.floor(r()*BS),Math.floor(r()*8)+2,Math.floor(r()*6)+2);
+    cx.fillStyle='rgba(0,0,0,0.3)';cx.fillRect(x+BS-3,y,3,BS);cx.fillRect(x,y+BS-3,BS,3);
+    cx.fillStyl
